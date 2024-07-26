@@ -45,7 +45,6 @@ end
 local function IsPointInCoordsT(point, c)
 	for i,v in pairs(modC) do
 		local c1,c2,c3 = v[1],v[2],v[3]
-		local a2,a3 = a[v[2]],a[v[3]]
 		local div = c[c1][c2]-c[i][c2]
 		local target = c[i][c3]+((div==0 and 0 or (c[c1][c3]-c[i][c3])/div)*(point[c2]-c[i][c2]))
 		if (i<=2 and point[c3]<target) or (i>2 and point[c3]>target) then return false end
