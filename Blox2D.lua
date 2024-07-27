@@ -184,6 +184,8 @@ Collision check variant of CheckCollisionFP that cuts out
 a fourth of the line intersection checks and half of the legacy collision detection.
 This however does not work for rotated objects, please don't try it.
 
+Requires table variant of GetObjectCorners, not UDim2.
+
 If you want to write more performant code, you can make this function
 skip checking for object corners by supplying your own table from the function,
 instead of instances for `o1` and `o2`
@@ -207,6 +209,8 @@ end
 The most precise yet expensive collision check function, performs 16 line intersect checks.
 Also uses the full legacy collision detection to check if an object is inside the target, where no sides would be intersecting.
 Not recommended for common use, use CheckCollisionFPNR when not dealing with rotation.
+
+Requires table variant of GetObjectCorners, not UDim2.
 
 If you want to write more performant code, you can make this function
 skip checking for object corners by supplying your own table from the function,
