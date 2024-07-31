@@ -146,6 +146,45 @@ module.CheckCollisionLegacy = function(o1,o2,_internal_CollisionFPdoNotCheckInpu
 	return false
 end
 
+--[[
+Returns true or false for whether an object's AnchorPoint is inside another object's hitbox.
+Argument 1 requires an instance to check the AnchorPoint of.
+Argument 2 can accept either a table variant of GetObjectCorners or an instance.
+]]--
+module.IsCenterColliding = function(o1,o2)
+	if not initialized then return notLoadedWarning("IsCenterColliding") end
+	debug.profilebegin("IsCenterColliding")
+	if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
+	local _,gameScale = optimalGetGameScale()
+	local ap1,ap2 = o1.AbsolutePosition,o1.AnchorPoint
+	local as = o1.AbsoluteSize
+	if IsPointInCoordsT({(ap1.X+as.X*ap2.X)/gameScale.X,(ap1.Y+as.Y*ap2.Y)/gameScale.Y},o2) then
+		debug.profileend()
+		return true
+	end
+	debug.profileend()
+	return false
+end
+
+--[[
+Returns true or false for whether a coordinate (Scale type) is inside an object's hitbox.
+Argument 1 requires a table input with two numbers inside, X and Y coordinates.
+Argument 2 can accept either a table variant of GetObjectCorners or an instance.
+
+This function expects coordinates of Scale type, so they should be from 0 to 1.
+]]--
+module.IsPointColliding = function(o1:{},o2)
+	if not initialized then return notLoadedWarning("IsPointColliding") end
+	debug.profilebegin("IsPointColliding")
+	if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
+	if IsPointInCoordsT(o1,o2) then
+		debug.profileend()
+		return true
+	end
+	debug.profileend()
+	return false
+end
+
 local function isIntersecting(s1, e1, s2, e2)
 	local x1, y1 = s1[1], s1[2]
 	local x2, y2 = e1[1], e1[2]
