@@ -347,9 +347,9 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	local inst = nil
 	local iter = (collection and (typeof(collection)~="table" and collection:GetChildren() or collection) or MainGame:GetChildren())
 	for _,v in pairs(iter) do
-		if not table.find(ignore,v) and not string.find(v.Name,"NC") then
+		if not table.find(ignore,v) then
 			local c = module.GetObjectCorners(v,1,true)
-			if not module.Config.HollowShapesWhenCasting and IsPointInCoordsT(src,c) then intersect = src dist = 0 inst = v break end
+			if not module.Config.HollowShapesWhenCasting and IsPointInCoordsT(src,c) then intersect = src dist = 0 inst = v debug.profileend() break end
 			for i = 1, 4 do
 				local temp = getIntersect(src,dest,c[i],c[i%4+1])
 				if temp then
