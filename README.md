@@ -1,7 +1,7 @@
 # Blox2D
 A Roblox ModuleScript containing useful functions for performing difficult 2D tasks.
 
-<img src="https://i.imgur.com/krshQY0.gif">
+<img src="https://i.imgur.com/krshQY0.gif"><br><sup>Demonstration of an experience made with Blox2D</sup>
 
 ## Support
 This module is still in an early stage.<br>
