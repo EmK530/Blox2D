@@ -3,8 +3,12 @@
 --[[
 
 Blox2D v2
-
 A module to help you on your journey to develop a game using only UI
+
+Current featureset:
+Collision detection
+Raycasting
+Point containment detection
 
 Developed by EmK530 :)
 
