@@ -26,6 +26,14 @@ module.Init = function(obj)
 	initialized = true
 end
 
+--[[
+Changes the behavior of the module.
+]]--
+module.Config = {
+	HollowShapesWhenCasting = false,
+	CacheCornerCalculations = true
+}
+
 local function notLoadedWarning(action)
 	warn("Cannot perform "..action.." when module is not initialized. Check the Init function of the module.")
 	return nil
@@ -56,6 +64,24 @@ local requiresRecalc = true
 local lastPos = nil
 local lastSize = nil
 
+local function optimalGetGameScale()
+	if requiresRecalc then
+		requiresRecalc = false
+		local offset = MainGame.AbsolutePosition
+		local gameScale = MainGame.AbsoluteSize
+		lastPos = offset
+		lastSize = gameScale
+		MainGame.Changed:Once(function()
+			requiresRecalc = true
+		end)
+		return offset,gameScale
+	else
+		return lastPos, lastSize
+	end
+end
+
+local cachedCorners = {}
+
 --[[
 Returns four UDim2 coordinates (in scale) for the corners of `obj`
 `scale`: Simulate a different object size by using this as a multiplier.
@@ -63,22 +89,14 @@ Returns four UDim2 coordinates (in scale) for the corners of `obj`
 ]]--
 module.GetObjectCorners = function(obj,scale: number,asArray: boolean)
 	if not initialized then return notLoadedWarning("GetObjectCorners") end
-	debug.profilebegin("GetObjectCorners")
-	if not scale then scale = 1 end
-	local offset,gameScale
-	if requiresRecalc then
-		requiresRecalc = false
-		offset = MainGame.AbsolutePosition
-		gameScale = MainGame.AbsoluteSize
-		lastPos = offset
-		lastSize = gameScale
-		MainGame.Changed:Once(function()
-			requiresRecalc = true
-		end)
-	else
-		offset = lastPos
-		gameScale = lastSize
+	local doCache = module.Config.CacheCornerCalculations
+	local c = if doCache then cachedCorners[obj] else nil
+	if c then
+		return c
 	end
+	debug.profilebegin("GetObjectCorners")
+	scale = scale or 1
+	local offset,gameScale = optimalGetGameScale()
 	local pos = obj.AbsolutePosition
 	local size = obj.AbsoluteSize
 	local rotation = obj.Rotation
@@ -105,6 +123,12 @@ module.GetObjectCorners = function(obj,scale: number,asArray: boolean)
 	local calc = math.floor((obj.Rotation+45)/90)
 	for i = 0, 3 do
 		sort[i+1] = coords[(i-calc)%4+1]
+	end
+	if doCache then
+		cachedCorners[obj] = sort
+		obj.Changed:Once(function()
+			cachedCorners[obj] = nil
+		end)
 	end
 	debug.profileend()
 	return sort
@@ -301,17 +325,6 @@ local function scaleOnly(dim)
 end
 
 --[[
-Changes the behavior of the module.
-These configs only affect Raycasting for now.
-]]--
-module.Config = {
-	HollowShapesWhenCasting = false,
-	CacheCornerCalculations = true
-}
-
-local cachedCorners = {}
-
---[[
 Perform a raycast operation, returns a table of info or nil if nothing is hit.
 `src`: Raycast source.
 `dir`: Raycast direction from source as offset.
@@ -335,14 +348,7 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	local iter = (collection and (typeof(collection)~="table" and collection:GetChildren() or collection) or MainGame:GetChildren())
 	for _,v in pairs(iter) do
 		if not table.find(ignore,v) and not string.find(v.Name,"NC") then
-			local c = if module.Config.CacheCornerCalculations then cachedCorners[v] else module.GetObjectCorners(v,1,true)
-			if not c then
-				c = module.GetObjectCorners(v,1,true)
-				cachedCorners[v] = c
-				v.Changed:Once(function()
-					cachedCorners[v] = nil
-				end)
-			end
+			local c = module.GetObjectCorners(v,1,true)
 			if not module.Config.HollowShapesWhenCasting and IsPointInCoordsT(src,c) then intersect = src dist = 0 inst = v break end
 			for i = 1, 4 do
 				local temp = getIntersect(src,dest,c[i],c[i%4+1])
