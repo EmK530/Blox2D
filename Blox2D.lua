@@ -102,9 +102,9 @@ module.GetObjectCorners = function(obj,scale: number,asArray: boolean)
 	local rotation = obj.Rotation
 	local midX, midY = pos.X + (size.X / 2*scale), pos.Y + (size.Y / 2*scale)
 	local angle = obj.Rotation
-	local radang = math.rad(angle)
-	local cosang = math.cos(radang)
-	local sinang = math.sin(radang)
+	local radang = angle==0 and 0 or math.rad(angle)
+	local cosang = angle==0 and 1 or math.cos(radang)
+	local sinang = angle==0 and 0 or math.sin(radang)
 	local coords = {}
 	for i = 1, 4 do
 		local cornerX = (i <= 2 and midX - (size.X / 2*scale) or midX + (size.X / 2*scale))
