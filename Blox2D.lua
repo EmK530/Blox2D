@@ -300,7 +300,7 @@ module.CheckCollisionFP = function(o1,o2)
 	return false
 end
 
-function getIntersect(s1, e1, s2, e2)
+local function getIntersect(s1, e1, s2, e2)
 	local x1, y1 = s1[1], s1[2]
 	local x2, y2 = e1[1], e1[2]
 	local x3, y3 = s2[1], s2[2]
@@ -322,6 +322,20 @@ function getIntersect(s1, e1, s2, e2)
 	end
 end
 
+local constant = 1.5707963267948966
+
+local function getNormalFromCoords(l1,l2)
+	debug.profilebegin("CalculateNormal")
+	local x1,x2,y1,y2 = l1[1],l2[1],l1[2],l2[2]
+	local offset,gameScale = optimalGetGameScale()
+	local ang = math.atan2((x1-x2),(y1-y2)*(gameScale.Y/gameScale.X))
+	local midX = x2+(x1-x2)/2
+	local midY = y2+(y1-y2)/2
+	local res = Vector2.new(math.sin(ang-constant),math.cos(ang-constant))
+	debug.profileend()
+	return res
+end
+
 local function scaleOnly(dim)
 	local as = MainGame.AbsoluteSize
 	local dx,dy,vx,vy = dim.X,dim.Y,as.X,as.Y
@@ -338,7 +352,8 @@ Perform a raycast operation, returns a table of info or nil if nothing is hit.
 If successful, returns a table containing:
 Position: UDim2 where the ray hit something (only scale),
 Instance: Object that the ray hit,
-Distance: Distance to the ray hit
+Distance: Distance to the ray hit,
+Normal: Vector2 normal calculated from the intersected object side
 ]]--
 module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	if not initialized then return notLoadedWarning("Raycast") end
@@ -349,16 +364,19 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	local dist = math.huge
 	local intersect = nil
 	local inst = nil
+	local i1,i2 = nil,nil
 	local iter = (collection and (typeof(collection)~="table" and collection:GetChildren() or collection) or MainGame:GetChildren())
 	for _,v in pairs(iter) do
 		if not table.find(ignore,v) then
 			local c = module.GetObjectCorners(v,1,true)
 			if not module.Config.HollowShapesWhenCasting and IsPointInCoordsT(src,c) then intersect = src dist = 0 inst = v debug.profileend() break end
 			for i = 1, 4 do
-				local temp = getIntersect(src,dest,c[i],c[i%4+1])
+				local l1,l2=c[i],c[i%4+1]
+				local temp = getIntersect(src,dest,l1,l2)
 				if temp then
 					local dst = math.sqrt((temp[1]-src[1])^2 + (temp[2]-src[2])^2)
 					if dst < dist then
+						i1,i2=l1,l2
 						intersect = temp
 						dist = dst
 						inst = v
@@ -367,11 +385,13 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 			end
 		end
 	end
+	local nrm = intersect and getNormalFromCoords(i1,i2) or nil
 	debug.profileend()
 	return intersect and {
 		Position = UDim2.fromScale(intersect[1],intersect[2]),
 		Instance = inst,
-		Distance = dist
+		Distance = dist,
+		Normal = nrm
 	} or nil
 end
 
