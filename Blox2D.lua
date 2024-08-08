@@ -385,7 +385,7 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 			end
 		end
 	end
-	local nrm = intersect and getNormalFromCoords(i1,i2) or nil
+	local nrm = (intersect and i1 and i2) and getNormalFromCoords(i1,i2) or Vector2.new(0,0)
 	debug.profileend()
 	return intersect and {
 		Position = UDim2.fromScale(intersect[1],intersect[2]),
