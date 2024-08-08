@@ -330,9 +330,10 @@ local function getNormalFromCoords(l1,l2)
 	local ax,ay = x1-x2,y1-y2
 	local offset,gameScale = optimalGetGameScale()
 	local ang = math.atan2(ax,ay*(gameScale.Y/gameScale.X))
-	local midX = x2+(ax)/2
-	local midY = y2+(ay)/2
-	local res = Vector2.new(math.sin(ang-constant),math.cos(ang-constant))
+	local midX = x2+ax/2
+	local midY = y2+ay/2
+	local offset = ang-constant
+	local res = Vector2.new(math.sin(offset),math.cos(offset))
 	debug.profileend()
 	return res
 end
