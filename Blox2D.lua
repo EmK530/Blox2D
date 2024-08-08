@@ -327,10 +327,11 @@ local constant = 1.5707963267948966
 local function getNormalFromCoords(l1,l2)
 	debug.profilebegin("CalculateNormal")
 	local x1,x2,y1,y2 = l1[1],l2[1],l1[2],l2[2]
+	local ax,ay = x1-x2,y1-y2
 	local offset,gameScale = optimalGetGameScale()
-	local ang = math.atan2((x1-x2),(y1-y2)*(gameScale.Y/gameScale.X))
-	local midX = x2+(x1-x2)/2
-	local midY = y2+(y1-y2)/2
+	local ang = math.atan2(ax,ay*(gameScale.Y/gameScale.X))
+	local midX = x2+(ax)/2
+	local midY = y2+(ay)/2
 	local res = Vector2.new(math.sin(ang-constant),math.cos(ang-constant))
 	debug.profileend()
 	return res
