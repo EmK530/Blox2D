@@ -369,7 +369,7 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	for _,v in pairs(iter) do
 		if not table.find(ignore,v) then
 			local c = module.GetObjectCorners(v,1,true)
-			if not module.Config.HollowShapesWhenCasting and IsPointInCoordsT(src,c) then intersect = src dist = 0 inst = v debug.profileend() break end
+			if not module.Config.HollowShapesWhenCasting and IsPointInCoordsT(src,c) then intersect = src dist = 0 inst = v break end
 			for i = 1, 4 do
 				local l1,l2=c[i],c[i%4+1]
 				local temp = getIntersect(src,dest,l1,l2)
