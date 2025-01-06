@@ -18,6 +18,7 @@ Developed by EmK530 :)
 local module = {}
 
 local initialized = false
+local studio = game:GetService("RunService"):IsStudio()
 
 local MainGame
 
@@ -460,7 +461,7 @@ module.Bouncecast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 		table.insert(instances, cast.Instance)
 		table.insert(bounces, src)
 	end
-	warn("[Blox2D] Exceeded MaxBouncecastBounces ("..max..") in the config!")
+	if studio then warn("[Blox2D] Exceeded MaxBouncecastBounces ("..max..") in the config!") end
 	local ohno = src+dir
 	debug.profileend()
 	return {
