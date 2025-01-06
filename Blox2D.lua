@@ -8,6 +8,7 @@ A module to help you on your journey to develop a game using only UI
 Current featureset:
 Collision detection
 Raycasting
+Raycasting with reflection
 Point containment detection
 
 Developed by EmK530 :)
@@ -35,7 +36,8 @@ Changes the behavior of the module.
 ]]--
 module.Config = {
 	HollowShapesWhenCasting = false,
-	CacheCornerCalculations = true
+	CacheCornerCalculations = true,
+	MaxBouncecastBounces = 25 -- to prevent infinite loops!
 }
 
 local function notLoadedWarning(action)
@@ -343,6 +345,11 @@ local function scaleOnly(dim)
 	local dx,dy,vx,vy = dim.X,dim.Y,as.X,as.Y
 	return {dx.Scale+dx.Offset/vx,dy.Scale+dy.Offset/vy}
 end
+local function scaleOnlyU(dim)
+	local as = MainGame.AbsoluteSize
+	local dx,dy,vx,vy = dim.X,dim.Y,as.X,as.Y
+	return UDim2.fromScale(dx.Scale+dx.Offset/vx,dy.Scale+dy.Offset/vy)
+end
 
 --[[
 Perform a raycast operation, returns a table of info or nil if nothing is hit.
@@ -363,7 +370,9 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	local dest = scaleOnly(src+dir)
 	src=scaleOnly(src)
 	dir=scaleOnly(dir)
-	local dist = math.huge
+	local as = MainGame.AbsoluteSize
+	local aspect = as.X/as.Y
+	local dist,dist2 = math.huge,math.huge
 	local intersect = nil
 	local inst = nil
 	local i1,i2 = nil,nil
@@ -376,11 +385,14 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 				local l1,l2=c[i],c[i%4+1]
 				local temp = getIntersect(src,dest,l1,l2)
 				if temp then
-					local dst = math.sqrt((temp[1]-src[1])^2 + (temp[2]-src[2])^2)
+					local d1 = temp[1]-src[1]
+					local dst = math.sqrt((d1)^2 + (temp[2]-src[2])^2)
+					local dst2 = math.sqrt((d1*aspect)^2 + (temp[2]-src[2])^2)
 					if dst < dist then
 						i1,i2=l1,l2
 						intersect = temp
 						dist = dst
+						dist2 = dst2
 						inst = v
 					end
 				end
@@ -393,8 +405,72 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 		Position = UDim2.fromScale(intersect[1],intersect[2]),
 		Instance = inst,
 		Distance = dist,
+		DistanceNS = dist2,
 		Normal = nrm
 	} or nil
+end
+
+local function distSubDir(input: UDim2, dist: number, aspect: number)
+	local x,y = input.X.Scale,input.Y.Scale
+	local vec = Vector2.new(x * aspect, y)
+	return vec - vec.Unit * dist
+end
+
+--garbage opt lol
+local temp = Vector2.new()
+local Dot = temp.Dot
+temp = nil
+
+local function bounceDir(input: UDim2, distance: Vector2, nrm: Vector2)
+	local size = MainGame.AbsoluteSize
+	local aspect = size.X/size.Y
+	local remainder = distSubDir(input, distance, aspect)
+	nrm = nrm.Unit
+	local dot = Dot(remainder, nrm)
+	return UDim2.fromScale(
+		(remainder.X - 2 * dot * nrm.X) / aspect,
+		remainder.Y - 2 * dot * nrm.Y
+	)
+end
+
+--[[
+Similar to Raycast, but continues a ray by having it "bounce" off an intersected object until its direction runs out.
+`src`: Raycast source.
+`dir`: Raycast direction from source as offset.
+`ignore`: Table of objects to ignore when casting.
+`collection`: (optional) Table of objects to perform raycasting checks on or an instance whose children will be checked.
+
+If successful, returns a table containing:
+Position: UDim2 where the ray ended (only scale),
+Instances: Objects that the ray hit
+
+This function has a limit of bounces to prevent crashes, this can be edited in module.Config
+]]--
+module.Bouncecast = function(src: UDim2,dir: UDim2,ignore: {},collection)
+	src=scaleOnlyU(src)
+	dir=scaleOnlyU(dir)
+	local instances = {}
+	local ign_count = #ignore
+	local max = module.Config.MaxBouncecastBounces
+	local bounces = 0
+	for i = 1, max do
+		local cast = module.Raycast(src, dir, ignore, collection)
+		if not cast then
+			return {Position=src+dir,Bounces=bounces,Instances=instances}
+		end
+		bounces += 1
+		src = cast.Position
+		dir = bounceDir(dir,cast.DistanceNS,cast.Normal)
+		ignore[ign_count + 1] = cast.Instance
+		table.insert(instances, cast.Instance)
+	end
+	warn("[Blox2D] Exceeded MaxBouncecastBounces ("..max..") in the config!")
+	local ohno = src+dir
+	return {
+		Position=src+dir,
+		Bounces=bounces,
+		Instances=instances,
+	}
 end
 
 return module
