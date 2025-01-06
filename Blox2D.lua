@@ -449,6 +449,8 @@ Instances: A table of objects that the ray hit
 This function has a limit of bounces to prevent crashes, this can be edited in module.Config
 ]]--
 module.Bouncecast = function(src: UDim2,dir: UDim2,ignore: {},collection)
+	if not initialized then return notLoadedWarning("Bouncecast") end
+	debug.profilebegin("Bouncecast")
 	src=scaleOnlyU(src)
 	dir=scaleOnlyU(dir)
 	local instances = {}
@@ -458,6 +460,7 @@ module.Bouncecast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	for i = 1, max do
 		local cast = module.Raycast(src, dir, ignore, collection)
 		if not cast then
+			debug.profileend()
 			return {Position=src+dir,Direction=dir,Bounces=bounces,Instances=instances}
 		end
 		src = cast.Position
@@ -468,6 +471,7 @@ module.Bouncecast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	end
 	warn("[Blox2D] Exceeded MaxBouncecastBounces ("..max..") in the config!")
 	local ohno = src+dir
+	debug.profileend()
 	return {
 		Position=src+dir,
 		Direction=dir,
