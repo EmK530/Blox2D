@@ -215,26 +215,22 @@ module.IsPointColliding = function(o1:{},o2)
 	return false
 end
 
+local up = unpack
 local function isIntersecting(s1, e1, s2, e2)
-	local x1, y1 = s1[1], s1[2]
-	local x2, y2 = e1[1], e1[2]
-	local x3, y3 = s2[1], s2[2]
-	local x4, y4 = e2[1], e2[2]
-	local d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-	if d == 0 then
-		return false
-	end
-	local t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / d
-	if t >= 0 and t <= 1 then
-		local u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / d
-		if u >= 0 and u <= 1 then
-			return true
-		else
-			return false
-		end
-	else
-		return false
-	end
+	local x1, y1 = up(s1)
+	local x2, y2 = up(e1)
+	local x3, y3 = up(s2)
+	local x4, y4 = up(e2)
+	local dx1, dy1, dx2, dy2 = x1-x2, y1-y2, x3-x4, y3-y4
+	local d = (dx1) * (dy2) - (dy1) * (dx2)
+	if d == 0 then return false end
+	local dx3, dy3 = x1-x3, y1-y3
+	local div = 1 / d
+	local t = ((dx3) * (dy2) - (dy3) * (dx2)) * div
+	if t < 0 or t > 1 then return false end
+	local u = -((dx1 * dy3) - (dy1 * dx3)) * div
+	if u < 0 or u > 1 then return false end
+	return true
 end
 
 local function CheckCollisionOneWay(o1,o2)
@@ -303,25 +299,20 @@ module.CheckCollisionFP = function(o1,o2)
 end
 
 local function getIntersect(s1, e1, s2, e2)
-	local x1, y1 = s1[1], s1[2]
-	local x2, y2 = e1[1], e1[2]
-	local x3, y3 = s2[1], s2[2]
-	local x4, y4 = e2[1], e2[2]
-	local d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-	if d == 0 then
-		return nil
-	end
-	local t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / d
-	if t >= 0 and t <= 1 then
-		local u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / d
-		if u >= 0 and u <= 1 then
-			return {x1 + t * (x2 - x1), y1 + t * (y2 - y1)}
-		else
-			return nil
-		end
-	else
-		return nil
-	end
+	local x1, y1 = up(s1)
+	local x2, y2 = up(e1)
+	local x3, y3 = up(s2)
+	local x4, y4 = up(e2)
+	local dx1, dy1, dx2, dy2 = x1-x2, y1-y2, x3-x4, y3-y4
+	local d = (dx1) * (dy2) - (dy1) * (dx2)
+	if d == 0 then return nil end
+	local dx3, dy3 = x1-x3, y1-y3
+	local div = 1 / d
+	local t = ((dx3) * (dy2) - (dy3) * (dx2)) * div
+	if t < 0 or t > 1 then return nil end
+	local u = -((dx1 * dy3) - (dy1 * dx3)) * div
+	if u < 0 or u > 1 then return nil end
+	return {x1 + t * -dx1, y1 + t * -dy1}
 end
 
 local constant = 1.5707963267948966
