@@ -262,10 +262,12 @@ module.CheckCollisionFPNR = function(o1,o2)
 	if typeof(o1) ~= "table" then o1 = module.GetObjectCorners(o1,1,true) end
 	if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
 	if CheckCollisionOneWay(o1,o2) then debug.profileend() return true end
-	if isIntersecting(o1[1],o1[2],o2[2],o2[3]) then debug.profileend() return true end
-	if isIntersecting(o1[3],o1[4],o2[2],o2[3]) then debug.profileend() return true end
-	if isIntersecting(o1[1],o1[2],o2[4],o2[1]) then debug.profileend() return true end
-	if isIntersecting(o1[3],o1[4],o2[4],o2[1]) then debug.profileend() return true end
+	local o11,o12,o13,o14 = up(o1)
+	local o21,o22,o23,o24 = up(o2)
+	if isIntersecting(o11,o12,o22,o23) then debug.profileend() return true end
+	if isIntersecting(o13,o14,o22,o23) then debug.profileend() return true end
+	if isIntersecting(o11,o12,o24,o21) then debug.profileend() return true end
+	if isIntersecting(o13,o14,o24,o21) then debug.profileend() return true end
 	debug.profileend()
 	return false
 end
