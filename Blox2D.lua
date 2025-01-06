@@ -452,23 +452,23 @@ module.Bouncecast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	local instances = {}
 	local ign_count = #ignore
 	local max = module.Config.MaxBouncecastBounces
-	local bounces = 0
+	local points = {}
 	for i = 1, max do
 		local cast = module.Raycast(src, dir, ignore, collection)
 		if not cast then
 			return {Position=src+dir,Bounces=bounces,Instances=instances}
 		end
-		bounces += 1
 		src = cast.Position
 		dir = bounceDir(dir,cast.DistanceNS,cast.Normal)
 		ignore[ign_count + 1] = cast.Instance
 		table.insert(instances, cast.Instance)
+		table.insert(points, cast.Position)
 	end
 	warn("[Blox2D] Exceeded MaxBouncecastBounces ("..max..") in the config!")
 	local ohno = src+dir
 	return {
 		Position=src+dir,
-		Bounces=bounces,
+		BouncePositions=points,
 		Instances=instances,
 	}
 end
