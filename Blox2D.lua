@@ -442,7 +442,9 @@ Similar to Raycast, but continues a ray by having it "bounce" off an intersected
 
 If successful, returns a table containing:
 Position: UDim2 where the ray ended (only scale),
-Instances: Objects that the ray hit
+Direction: The final raycast direction that was used,
+Bounces: A table of positions where the ray bounced,
+Instances: A table of objects that the ray hit
 
 This function has a limit of bounces to prevent crashes, this can be edited in module.Config
 ]]--
@@ -452,23 +454,24 @@ module.Bouncecast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	local instances = {}
 	local ign_count = #ignore
 	local max = module.Config.MaxBouncecastBounces
-	local points = {}
+	local bounces = {}
 	for i = 1, max do
 		local cast = module.Raycast(src, dir, ignore, collection)
 		if not cast then
-			return {Position=src+dir,Bounces=bounces,Instances=instances}
+			return {Position=src+dir,Direction=dir,Bounces=bounces,Instances=instances}
 		end
 		src = cast.Position
 		dir = bounceDir(dir,cast.DistanceNS,cast.Normal)
 		ignore[ign_count + 1] = cast.Instance
 		table.insert(instances, cast.Instance)
-		table.insert(points, cast.Position)
+		table.insert(bounces, src)
 	end
 	warn("[Blox2D] Exceeded MaxBouncecastBounces ("..max..") in the config!")
 	local ohno = src+dir
 	return {
 		Position=src+dir,
-		BouncePositions=points,
+		Direction=dir,
+		Bounces=bounces,
 		Instances=instances,
 	}
 end
