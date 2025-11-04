@@ -158,8 +158,8 @@ module.CheckCollisionLegacy = function(o1,o2,_internal_CollisionFPdoNotCheckInpu
 	debug.profilebegin("CheckCollision")
 	local targetFunc = IsPointInCoordsT
 	if not _internal_CollisionFPdoNotCheckInputs then
-		if typeof(o1) ~= "table" then o1 = module.GetObjectCorners(o1,1,true) else targetFunc = (typeof(o1[1])=="table" and IsPointInCoordsT or IsPointInCoords) end
-		if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
+		if typeof(o1) ~= "table" then if o1:IsA("GuiBase2d") then o1 = module.GetObjectCorners(o1,1,true) else return false end else targetFunc = (typeof(o1[1])=="table" and IsPointInCoordsT or IsPointInCoords) end
+		if typeof(o2) ~= "table" then if o2:IsA("GuiBase2d") then o2 = module.GetObjectCorners(o2,1,true) else return false end end
 	end
 	for i,v in pairs(o1) do
 		if targetFunc(v,o2) then
@@ -185,7 +185,7 @@ Argument 2 can accept either a table variant of GetObjectCorners or an instance.
 module.IsCenterColliding = function(o1,o2)
 	if not initialized then return notLoadedWarning("IsCenterColliding") end
 	debug.profilebegin("IsCenterColliding")
-	if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
+	if typeof(o2) ~= "table" then if o2:IsA("GuiBase2d") then o2 = module.GetObjectCorners(o2,1,true) else return false end end
 	local _,gameScale = optimalGetGameScale()
 	local ap1,ap2 = o1.AbsolutePosition,o1.AnchorPoint
 	local as = o1.AbsoluteSize
@@ -207,7 +207,7 @@ This function expects coordinates of Scale type, so they should be from 0 to 1.
 module.IsPointColliding = function(o1:{},o2)
 	if not initialized then return notLoadedWarning("IsPointColliding") end
 	debug.profilebegin("IsPointColliding")
-	if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
+	if typeof(o2) ~= "table" then if o2:IsA("GuiBase2d") then o2 = module.GetObjectCorners(o2,1,true) else return false end end
 	if IsPointInCoordsT(o1,o2) then
 		debug.profileend()
 		return true
@@ -259,8 +259,8 @@ instead of instances for `o1` and `o2`
 module.CheckCollisionFPNR = function(o1,o2)
 	if not initialized then return notLoadedWarning("CheckCollisionFPNR") end
 	debug.profilebegin("CheckCollisionFPNR")
-	if typeof(o1) ~= "table" then o1 = module.GetObjectCorners(o1,1,true) end
-	if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
+	if typeof(o1) ~= "table" then if o1:IsA("GuiBase2d") then o1 = module.GetObjectCorners(o1,1,true) else return false end end
+	if typeof(o2) ~= "table" then if o2:IsA("GuiBase2d") then o2 = module.GetObjectCorners(o2,1,true) else return false end end
 	if CheckCollisionOneWay(o1,o2) then debug.profileend() return true end
 	local o11,o12,o13,o14 = up(o1)
 	local o21,o22,o23,o24 = up(o2)
@@ -287,8 +287,8 @@ instead of instances for `o1` and `o2`
 module.CheckCollisionFP = function(o1,o2)
 	if not initialized then return notLoadedWarning("CheckCollisionFP") end
 	debug.profilebegin("CheckCollisionFP")
-	if typeof(o1) ~= "table" then o1 = module.GetObjectCorners(o1,1,true) end
-	if typeof(o2) ~= "table" then o2 = module.GetObjectCorners(o2,1,true) end
+	if typeof(o1) ~= "table" then if o1:IsA("GuiBase2d") then o1 = module.GetObjectCorners(o1,1,true) else return false end end
+	if typeof(o2) ~= "table" then if o2:IsA("GuiBase2d") then o2 = module.GetObjectCorners(o2,1,true) else return false end end
 	if module.CheckCollisionLegacy(o1,o2,true) then debug.profileend() return true end
 	for x = 1, 4 do
 		local x2 = math.max(1,(x+1)%5)
@@ -372,7 +372,7 @@ module.Raycast = function(src: UDim2,dir: UDim2,ignore: {},collection)
 	local i1,i2 = nil,nil
 	local iter = (collection and (typeof(collection)~="table" and collection:GetChildren() or collection) or MainGame:GetChildren())
 	for _,v in pairs(iter) do
-		if not table.find(ignore,v) then
+		if not table.find(ignore,v) and v:IsA("GuiBase2d") then
 			local c = module.GetObjectCorners(v,1,true)
 			if not module.Config.HollowShapesWhenCasting and IsPointInCoordsT(src,c) then intersect = src dist = 0 inst = v break end
 			for i = 1, 4 do
